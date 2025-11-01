@@ -2,6 +2,7 @@ import logging
 import requests
 import asyncio
 import os
+import platform
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, MessageHandler,
@@ -10,17 +11,18 @@ from telegram.ext import (
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 import threading
 
-# =================== Windows Async Fix ===================
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+# =================== Windows Async Fix (Safe for All OS) ===================
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # =================== Tokens ===================
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") 
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY") 
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 
 # =================== Channel ===================
 CHANNEL_USERNAME = "@equation_x"
 
-# =================== RapidAPI ===================
+# =================== RapidAPI Config ===================
 API_URL = "https://insta-reels-downloader-the-fastest-hd-reels-fetcher-api.p.rapidapi.com/unified/index"
 HEADERS = {
     "x-rapidapi-host": "insta-reels-downloader-the-fastest-hd-reels-fetcher-api.p.rapidapi.com",
@@ -30,19 +32,19 @@ HEADERS = {
 # =================== Logging ===================
 logging.basicConfig(level=logging.INFO)
 
-# =================== Dummy HTTP Server ===================
+# =================== Dummy HTTP Server (to keep alive on Render) ===================
 PORT = int(os.environ.get("PORT", 10000))
 def run_dummy_server():
     server = HTTPServer(('0.0.0.0', PORT), SimpleHTTPRequestHandler)
     server.serve_forever()
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-# =================== Helper ===================
+# =================== Helper Function ===================
 async def is_subscribed(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
         return member.status in ["member", "administrator", "creator"]
-    except:
+    except Exception:
         return False
 
 # =================== /start Command ===================
@@ -65,7 +67,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👋 Welcome {first_name}!\n\nSend me any Instagram reel link, and I’ll download it for you instantly 🚀"
     )
 
-# =================== Check Subscription ===================
+# =================== Check Subscription Button ===================
 async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
@@ -102,12 +104,14 @@ async def download_reel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         waiting_msg = await update.message.reply_text("⏳ Processing your reel, please wait...")
         response = requests.get(API_URL, headers=HEADERS, params={"url": user_text})
+
         if response.status_code != 200:
             await waiting_msg.edit_text(f"⚠️ API returned status {response.status_code}")
             return
 
         data = response.json()
         reel_url = None
+
         if "data" in data and isinstance(data["data"], dict):
             content = data["data"].get("content", {})
             if isinstance(content, dict):
@@ -141,5 +145,5 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
+    main()
 
-    main()               
