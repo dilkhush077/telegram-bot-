@@ -14,8 +14,8 @@ import threading
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # =================== Tokens ===================
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") or "8399634229:AAFBSB377vTAuXU1nv50D55XTR6Jyfl_G7U"
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY") or "67a4030b4cmshb79b66aac0fbe25p124f92jsn81e79164041a"
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") 
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY") 
 
 # =================== Channel ===================
 CHANNEL_USERNAME = "@equation_x"
@@ -141,4 +141,5 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
+
     main()               
